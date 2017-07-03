@@ -28,13 +28,80 @@ public class Controller : MonoBehaviour
         new Setup(1, 1, 3, 2, 4),
         new Setup(2, 4, 3, 1, 2),
     };
-    /// <summary>Correct button positions</summary>
+    /// <summary>Correct button positions (starting with 1)</summary>
     private readonly int[] solution = new[] { 4, 4, 1, 4, 2 };
+
+    private void CreateSolution()
+    {
+        for(int i = 0; i < setups.Length; ++i)
+        {
+            setups[i] = new Setup(UnityEngine.Random.Range(1, 5), new[] { 1, 2, 3, 4 }.Shuffle());
+            solution[i] = FindSolution(i);
+        }
+    }
+
+    private int FindPosition(int[] buttons, int label)
+    {
+        return Array.FindIndex(buttons, button => button == label) + 1;
+    }
+
+    private int FindSolution(int stage)
+    {
+        var label = setups[stage].label;
+        var buttons = setups[stage].buttons;
+        switch (stage)
+        {
+            case 0:
+                if(label == 1) { return 2; }
+                return label;
+            case 1:
+                switch (label)
+                {
+                    case 2:
+                    case 4:
+                        return solution[0];
+                    case 1: return FindPosition(buttons, 4);
+                    case 3: return 1;
+                    default: throw new ArgumentException("Invalid label number " + label);
+                }
+            case 2:
+                switch (label)
+                {
+                    case 1: return FindPosition(buttons, solution[1]);
+                    case 2: return FindPosition(buttons, solution[0]);
+                    case 3: return 3;
+                    case 4: return FindPosition(buttons, 4);
+                    default: throw new ArgumentException("Invalid label number " + label);
+                }
+            case 3:
+                switch (label)
+                {
+                    case 3:
+                    case 4:
+                        return solution[1];
+                    case 1: return solution[0];
+                    case 2: return 1;
+                    default: throw new ArgumentException("Invalid label number " + label);
+                }
+            case 4:
+                switch (label)
+                {
+                    case 1:
+                    case 2:
+                        return FindPosition(buttons, label);
+                    case 3: return FindPosition(buttons, 4);
+                    case 4: return FindPosition(buttons, 3);
+                    default: throw new ArgumentException("Invalid label number " + label);
+                }
+            default: throw new ArgumentException("Invalid stage number " + (stage + 1));
+        }
+    }
 
     private void Start()
     {
         startTime = Time.time;
         startAnimationSource = pad.rotation;
+        CreateSolution();
         for (int i = 0; i < buttons.Length; ++i)
         {
             var position = i + 1;
