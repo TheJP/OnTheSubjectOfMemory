@@ -33,16 +33,22 @@ public class Controller : MonoBehaviour
 
     private void CreateSolution()
     {
-        for(int i = 0; i < setups.Length; ++i)
+        var random = new System.Random();
+        for (int i = 0; i < setups.Length; ++i)
         {
-            setups[i] = new Setup(UnityEngine.Random.Range(1, 5), new[] { 1, 2, 3, 4 }.Shuffle());
+            setups[i] = new Setup(UnityEngine.Random.Range(1, 5), new[] { 1, 2, 3, 4 }.Shuffle(random));
             solution[i] = FindSolution(i);
         }
     }
 
-    private int FindPosition(int[] buttons, int label)
+    private int FindButtonWithLabel(int[] buttons, int buttonLabel)
     {
-        return Array.FindIndex(buttons, button => button == label) + 1;
+        return Array.FindIndex(buttons, button => button == buttonLabel) + 1;
+    }
+
+    private int FindButtonWithSameLabelAsInStage(int[] buttons, int stage)
+    {
+        return FindButtonWithLabel(buttons, setups[stage].buttons[solution[stage] - 1]);
     }
 
     private int FindSolution(int stage)
@@ -60,17 +66,17 @@ public class Controller : MonoBehaviour
                     case 2:
                     case 4:
                         return solution[0];
-                    case 1: return FindPosition(buttons, 4);
+                    case 1: return FindButtonWithLabel(buttons, 4);
                     case 3: return 1;
                     default: throw new ArgumentException("Invalid label number " + label);
                 }
             case 2:
                 switch (label)
                 {
-                    case 1: return FindPosition(buttons, solution[1]);
-                    case 2: return FindPosition(buttons, solution[0]);
+                    case 1: return FindButtonWithSameLabelAsInStage(buttons, 1);
+                    case 2: return FindButtonWithSameLabelAsInStage(buttons, 0);
                     case 3: return 3;
-                    case 4: return FindPosition(buttons, 4);
+                    case 4: return FindButtonWithLabel(buttons, 4);
                     default: throw new ArgumentException("Invalid label number " + label);
                 }
             case 3:
@@ -88,9 +94,9 @@ public class Controller : MonoBehaviour
                 {
                     case 1:
                     case 2:
-                        return FindPosition(buttons, label);
-                    case 3: return FindPosition(buttons, 4);
-                    case 4: return FindPosition(buttons, 3);
+                        return FindButtonWithSameLabelAsInStage(buttons, label - 1);
+                    case 3: return FindButtonWithSameLabelAsInStage(buttons, 3);
+                    case 4: return FindButtonWithSameLabelAsInStage(buttons, 2);
                     default: throw new ArgumentException("Invalid label number " + label);
                 }
             default: throw new ArgumentException("Invalid stage number " + (stage + 1));
