@@ -13,6 +13,8 @@ public class Controller : MonoBehaviour
     public GameObject url;
     public GameObject explosionPrefab;
     public Transform pad;
+    public Text countDownText;
+    public float countDownStart = 60f;
 
     private Quaternion startAnimationSource;
     private readonly Quaternion startAnimationTarget = Quaternion.identity;
@@ -30,6 +32,8 @@ public class Controller : MonoBehaviour
     };
     /// <summary>Correct button positions (starting with 1)</summary>
     private readonly int[] solution = new[] { 4, 4, 1, 4, 2 };
+    private bool gameOver = false;
+    private int lastBeep = 0;
 
     private void CreateSolution()
     {
@@ -58,7 +62,7 @@ public class Controller : MonoBehaviour
         switch (stage)
         {
             case 0:
-                if(label == 1) { return 2; }
+                if (label == 1) { return 2; }
                 return label;
             case 1:
                 switch (label)
@@ -138,6 +142,8 @@ public class Controller : MonoBehaviour
 
     private void Explosion()
     {
+        if (gameOver) { return; }
+        gameOver = true;
         var explosion = Instantiate(explosionPrefab, new Vector3(0, 0, -2), Quaternion.identity);
         explosion.transform.localScale = new Vector3(2, 2, 2);
         ignoreInput = true;
@@ -166,11 +172,13 @@ public class Controller : MonoBehaviour
 
     private void Victory()
     {
+        if (gameOver) { return; }
+        gameOver = true;
         var indicator = FindObjectOfType<Indicator>();
         indicator.success = true;
         label.text = "";
         url.SetActive(true);
-        foreach(var button in buttons)
+        foreach (var button in buttons)
         {
             button.gameObject.SetActive(false);
         }
@@ -180,6 +188,19 @@ public class Controller : MonoBehaviour
     {
         pad.rotation = Quaternion.Lerp(startAnimationSource, startAnimationTarget, (Time.time - startTime) / startDuration);
         pad.localScale = Vector3.Lerp(new Vector3(0, 0, 0), new Vector3(1, 1, 1), (Time.time - startTime) / startDuration);
+        if (!gameOver) { UpdateCoundDown(); }
+    }
+
+    private void UpdateCoundDown()
+    {
+        var time = countDownStart - (Time.time - startTime);
+        if ((int)time != lastBeep)
+        {
+            Camera.main.GetComponent<AudioSource>().Play();
+            lastBeep = (int)time;
+        }
+        if (time < 0f) { Explosion(); }
+        countDownText.text = string.Format("{0:00}:{1:00}", (int)(time / 60f), (int)(time % 60f));
     }
 
     class Setup
